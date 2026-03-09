@@ -10,44 +10,38 @@ function Dashboard() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [iptu, setIptu] = useState<Iptuu | null>(null);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  
-   useEffect(() => {
-  const buscarDados = async () => {
-    try {
-      const response = await axios.post(
-        "http://localhost:3001/usuario/iptu-por-usuario",
-        { userId: user.id }
-      );
 
-      setIptu(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar IPTU", error);
+  useEffect(() => {
+    const buscarDados = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:3001/usuario/iptu-por-usuario",
+          { userId: user.id },
+        );
+
+        setIptu(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar IPTU", error);
+      }
+    };
+
+    const buscarComentarios = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/comentario");
+
+        setComentarios(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar comentários", error);
+      }
+    };
+
+    if (user?.id) {
+      buscarDados();
+      buscarComentarios();
     }
-  };
-
-  const buscarComentarios = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:3001/comentario"
-      );
-
-      setComentarios(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar comentários", error);
-    }
-  };
-
-  if (user?.id) {
-    buscarDados();
-    buscarComentarios();
-  }
-}, [user]);
-
-
-            
+  }, [user]);
 
   // dados fictícios de IPTU
- 
 
   return (
     <div style={styles.container}>
@@ -55,18 +49,14 @@ function Dashboard() {
         <h2>Bem-vindo, {user.nome}</h2>
 
         <div style={{ position: "relative" }}>
-          <button onClick={() => setMenuAberto(!menuAberto)}>
-            ☰ Menu
-          </button>
+          <button onClick={() => setMenuAberto(!menuAberto)}>☰ Menu</button>
 
           {menuAberto && (
             <div style={styles.dropdown}>
               <button onClick={() => alert("Listar Munícipes")}>
                 Listar Munícipes
               </button>
-              <button onClick={() => alert("Outra opção")}>
-                Outra opção
-              </button>
+              <button onClick={() => alert("Outra opção")}>Outra opção</button>
             </div>
           )}
         </div>
@@ -79,26 +69,19 @@ function Dashboard() {
         <p>Status: {iptu?.valor}</p>
       </div>
       <div style={{ padding: "40px" }}>
-      <h2>Lista de Comentários</h2>
+        <h2>Lista de Comentários</h2>
 
-      <ul>
-        {comentarios.map((comentario, index) => (
-          <li key={index}>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: `
-                  <strong>Usuário:</strong> ${comentario.usuario_id}
-                  <br/>
-                  <strong>Mensagem:</strong> ${comentario.texto}
-                `,
-              }}
-            />
-          </li>
-        ))}
-      </ul>
+        <ul>
+          {comentarios.map((comentario, index) => (
+            <li key={index}>
+              <strong>Usuário:</strong> {comentario.usuario_id}
+              <br />
+              <strong>Mensagem:</strong> {comentario.texto}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
-    </div>
-    
   );
 }
 

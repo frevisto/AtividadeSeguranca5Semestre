@@ -11,17 +11,39 @@ function Login() {
     const [nome, setNome] = useState("");
     const [message, setMessage] = useState("");
 
+    // Regex simples para validação de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Sanitização básica para evitar caracteres inesperados
+    const sanitizeNome = (nome: string) => {
+        return nome.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+    };
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // 🔒 Validação de input (evita envio de payload malicioso simples)
+        if (!emailRegex.test(email)) {
+            setMessage("E-mail inválido");
+            return;
+        }
+
+        if (password.length < 6) {
+            setMessage("Senha deve ter ao menos 6 caracteres");
+            return;
+        }
 
         try {
             const response = await axios.post(
                 "http://localhost:3001/usuario/login",
                 { email, password }
             );
+
             const user = response.data.user;
 
-            // salvando no localStorage
+            // ⚠️ localStorage pode ser manipulado pelo usuário
+            // Nesta fase do projeto estamos mantendo,
+            // mas o ideal futuramente é usar JWT.
             localStorage.setItem("user", JSON.stringify(user));
 
             navigate("/dashboard");
@@ -33,11 +55,27 @@ function Login() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // 🔒 Validação básica de email
+        if (!emailRegex.test(email)) {
+            setMessage("E-mail inválido");
+            return;
+        }
+
+        if (password.length < 6) {
+            setMessage("Senha deve ter ao menos 6 caracteres");
+            return;
+        }
+
         try {
             const response = await axios.post(
                 "http://localhost:3001/usuario/novo-login",
-                { email, password, nome }
+                {
+                    email,
+                    password,
+                    nome: sanitizeNome(nome) // 🔒 sanitização do nome
+                }
             );
+
             if (response.data.success) {
                 setMessage("Usuário criado com sucesso!");
                 setIsRegistering(false);
@@ -60,7 +98,8 @@ function Login() {
                         type="text"
                         placeholder="Nome Completo"
                         value={nome}
-                        onChange={(e) => setNome(e.target.value)}
+                        // 🔒 Sanitização do nome
+                        onChange={(e) => setNome(sanitizeNome(e.target.value))}
                         style={styles.input}
                         required
                     />
